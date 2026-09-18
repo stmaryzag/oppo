@@ -7,7 +7,7 @@ import {
   AlertCircle, Download, Phone, MapPin, Calendar, FileSpreadsheet,
   UploadCloud, Copy, Check, ShieldCheck, HeartHandshake, Sparkles, Link2
 } from 'lucide-react';
-import { Role, UserData } from '../../types';
+import { Role, UserData, ChorusGroup } from '../../types';
 import { parseExcelFile, ParsedDeaconRow } from '../../utils/excelImport';
 import { 
   createAndLinkParentAccount, 
@@ -15,11 +15,13 @@ import {
   generateParentUsername, 
   ParentCreationResult 
 } from '../../utils/parentGenerator';
+import { Crown, Layers } from 'lucide-react';
 
 export const ManageUsers = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [areas, setAreas] = useState<any[]>([]);
   const [teams, setTeams] = useState<any[]>([]);
+  const [choruses, setChoruses] = useState<ChorusGroup[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -32,6 +34,7 @@ export const ManageUsers = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<Role>('deacon');
+  const [selectedGroupId, setSelectedGroupId] = useState('');
   const [selectedParentOfDeaconId, setSelectedParentOfDeaconId] = useState('');
 
   // Edit user state
@@ -71,10 +74,15 @@ export const ManageUsers = () => {
       setTeams(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
     });
 
+    const unsubChoruses = onSnapshot(collection(db, 'chorus_groups'), (snapshot) => {
+      setChoruses(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as ChorusGroup)).sort((a, b) => a.order - b.order));
+    });
+
     return () => {
       unsubUsers();
       unsubAreas();
       unsubTeams();
+      unsubChoruses();
     };
   }, []);
 
@@ -104,6 +112,8 @@ export const ManageUsers = () => {
         grade: '',
         areaId: '',
         teamId: '',
+        groupId: selectedGroupId || '',
+        assignedGroupIds: selectedGroupId ? [selectedGroupId] : [],
         assignedAssistantId: '',
         parentOfDeaconId: role === 'parent' ? selectedParentOfDeaconId : '',
         tempPassword: password
@@ -164,6 +174,8 @@ export const ManageUsers = () => {
         grade: editingUser.grade || '',
         areaId: editingUser.areaId || '',
         teamId: editingUser.teamId || '',
+        groupId: editingUser.groupId || '',
+        assignedGroupIds: editingUser.groupId ? [editingUser.groupId] : (editingUser.assignedGroupIds || []),
         role: editingUser.role || 'deacon',
         parentOfDeaconId: editingUser.parentOfDeaconId || ''
       });
@@ -401,6 +413,7 @@ export const ManageUsers = () => {
   const getRoleColor = (r: string) => {
     switch (r) {
       case 'admin': return 'bg-red-50 text-red-700 border-red-200';
+      case 'chorus_admin': return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'assistant': return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'parent': return 'bg-blue-50 text-blue-700 border-blue-200';
       default: return 'bg-slate-50 text-slate-700 border-slate-200';
@@ -409,8 +422,9 @@ export const ManageUsers = () => {
 
   const getRoleName = (r: string) => {
     switch (r) {
-      case 'admin': return 'أدمن';
-      case 'assistant': return 'خادم';
+      case 'admin': return 'الادمن الرئيسي';
+      case 'chorus_admin': return 'أدمن الخورس';
+      case 'assistant': return 'خادم الخورس';
       case 'parent': return 'ولي أمر';
       default: return 'شماس';
     }
@@ -568,12 +582,39 @@ export const ManageUsers = () => {
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 text-sm font-medium"
               >
                 <option value="deacon">شماس</option>
-                <option value="assistant">خادم</option>
+                <option value="chorus_admin">أدمن الخورس (Chorus Admin)</option>
+                <option value="assistant">خادم الخورس</option>
+                <option value="admin">الادمن الرئيسي (Super Admin)</option>
                 <option value="parent">ولي أمر</option>
-                <option value="admin">أدمن (مدير)</option>
               </select>
             </div>
           </div>
+
+          {(role === 'chorus_admin' || role === 'assistant' || role === 'deacon') && (
+            <div className="p-4 bg-indigo-50/70 border border-indigo-200 rounded-2xl">
+              <label className="block text-xs font-bold text-indigo-950 mb-1 flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-indigo-700" />
+                <span>الخورس التابع له هذا الحساب:</span>
+              </label>
+              <select
+                value={selectedGroupId}
+                onChange={e => setSelectedGroupId(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-white border border-indigo-300 rounded-xl focus:outline-none focus:border-indigo-500 text-sm font-bold text-indigo-900"
+              >
+                <option value="">-- بدون خورس محدد --</option>
+                {choruses.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} (#{c.code})
+                  </option>
+                ))}
+              </select>
+              {role === 'chorus_admin' && (
+                <p className="text-[11px] text-indigo-700 mt-1">
+                  أدمن الخورس سيمتلك صلاحيات شاملة ومستقلة على هذا الخورس بكل تفاصيله وشمامسته ومواده وامتحاناته واشتراكاته.
+                </p>
+              )}
+            </div>
+          )}
 
           {role === 'parent' && (
             <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-2xl">
@@ -634,9 +675,10 @@ export const ManageUsers = () => {
             >
               <option value="all">كل الأدوار</option>
               <option value="deacon">الشمامسة فقط</option>
+              <option value="chorus_admin">أدمن الخورس (Chorus Admins)</option>
               <option value="assistant">الخُدام</option>
               <option value="parent">أولياء الأمور</option>
-              <option value="admin">المدراء (Admins)</option>
+              <option value="admin">الادمن الرئيسي (Super Admins)</option>
             </select>
           </div>
         </div>
@@ -735,8 +777,14 @@ export const ManageUsers = () => {
                       <span className="line-clamp-2">{u.address}</span>
                     </div>
                   )}
-                  {(userArea || userTeam) && (
-                    <div className="flex items-center gap-2 pt-1 border-t border-slate-200/60 font-medium">
+                  {(userArea || userTeam || u.groupId) && (
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-200/60 font-medium">
+                      {u.groupId && (
+                        <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md text-[10px] font-bold flex items-center gap-1">
+                          <Layers className="w-3 h-3 text-purple-600" />
+                          {choruses.find(c => c.id === u.groupId || c.code === u.groupId)?.name || u.groupId}
+                        </span>
+                      )}
                       {userArea && <span className="bg-orange-100 text-orange-800 px-2 py-0.5 rounded-md text-[10px]">المنطقة: {userArea}</span>}
                       {userTeam && <span className="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-md text-[10px]">الفريق: {userTeam}</span>}
                     </div>
@@ -1057,12 +1105,31 @@ export const ManageUsers = () => {
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-blue-500"
                   >
                     <option value="deacon">شماس</option>
-                    <option value="assistant">خادم</option>
+                    <option value="chorus_admin">أدمن الخورس (Chorus Admin)</option>
+                    <option value="assistant">خادم الخورس</option>
+                    <option value="admin">الادمن الرئيسي (Super Admin)</option>
                     <option value="parent">ولي أمر</option>
-                    <option value="admin">أدمن (مدير)</option>
                   </select>
                 </div>
 
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">الخورس التابع له</label>
+                  <select
+                    value={editingUser.groupId || ''}
+                    onChange={e => setEditingUser({ ...editingUser, groupId: e.target.value })}
+                    className="w-full px-3 py-2 bg-indigo-50/50 border border-indigo-200 rounded-xl text-xs font-bold text-indigo-900 focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="">-- بدون خورس محدد --</option>
+                    {choruses.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} (#{c.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {editingUser.role === 'parent' ? (
                   <div>
                     <label className="block text-xs font-bold text-amber-900 mb-1 flex items-center gap-1">

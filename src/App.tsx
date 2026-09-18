@@ -22,6 +22,7 @@ import { ManageSubscriptions } from './pages/admin/ManageSubscriptions';
 import { ManageLevels } from './pages/admin/ManageLevels';
 import { FastAttendance } from './pages/admin/FastAttendance';
 import { ManageGroups } from './pages/admin/ManageGroups';
+import { ChorusAdminDashboard } from './pages/dashboard/ChorusAdminDashboard';
 import { StudyMaterials } from './pages/study/StudyMaterials';
 import { QuizManager } from './pages/quiz/QuizManager';
 import { QuizBuilder } from './pages/quiz/QuizBuilder';
@@ -61,6 +62,7 @@ export default function App() {
               <Route element={<AdminRoute />}>
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/groups" element={<ManageGroups />} />
+                <Route path="/admin/chorus" element={<ChorusAdminDashboard />} />
                 <Route path="/admin/attendance" element={<FastAttendance />} />
                 <Route path="/admin/areas" element={<ManageAreas />} />
                 <Route path="/admin/teams" element={<ManageTeams />} />

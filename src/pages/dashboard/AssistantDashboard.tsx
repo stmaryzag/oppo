@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { collection, query, where, getDocs, addDoc, onSnapshot, setDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import { useAuth } from '../../contexts/AuthContext';
-import { Users, CheckCircle, Clock, Loader2, CreditCard, CheckCircle2, XCircle, UserCheck, Trash2, Search, Filter, Sparkles } from 'lucide-react';
+import { Users, CheckCircle, Clock, Loader2, CreditCard, CheckCircle2, XCircle, UserCheck, Trash2, Search, Filter, Sparkles, Layers, BookOpen, Award } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { SubscriptionRecord } from '../../types';
+import { SubscriptionRecord, ChorusGroup } from '../../types';
 import { subscribeSystemSettings } from '../../utils/systemSettings';
 import { sendSubscriptionNotification } from '../../utils/notificationHelper';
 import { awardAfteqadPointsOnAttendance, revertAfteqadPointsOnAttendanceCancel } from '../../utils/afetqadHelper';
@@ -13,7 +13,9 @@ export const AssistantDashboard = () => {
   const { userData } = useAuth();
   const navigate = useNavigate();
   
-  const [deacons, setDeacons] = useState<any[]>([]);
+  const [choruses, setChoruses] = useState<ChorusGroup[]>([]);
+  const [selectedChorusId, setSelectedChorusId] = useState<string>('');
+  const [allDeacons, setAllDeacons] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [subscriptions, setSubscriptions] = useState<Record<string, SubscriptionRecord>>({});
   const [attendanceMap, setAttendanceMap] = useState<Record<string, boolean>>({});
@@ -30,6 +32,40 @@ export const AssistantDashboard = () => {
   const todayDateStr = now.toISOString().slice(0, 10);
   const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
+  // 1. Fetch Chorus Groups
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'chorus_groups'), (snap) => {
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() } as ChorusGroup))
+        .sort((a, b) => a.order - b.order);
+      setChoruses(list);
+
+      // Determine default chorus for this assistant
+      if (userData?.groupId) {
+        setSelectedChorusId(userData.groupId);
+      } else if (userData?.assignedGroupIds && userData.assignedGroupIds.length > 0) {
+        setSelectedChorusId(userData.assignedGroupIds[0]);
+      } else if (list.length > 0 && !selectedChorusId) {
+        setSelectedChorusId(list[0].id);
+      }
+    });
+    return () => unsub();
+  }, [userData]);
+
+  // Allowed Choruses this assistant can see
+  const availableChoruses = useMemo(() => {
+    if (userData?.assignedGroupIds && userData.assignedGroupIds.length > 0) {
+      return choruses.filter(c => userData.assignedGroupIds?.includes(c.id) || userData.assignedGroupIds?.includes(c.code) || c.id === userData.groupId);
+    }
+    if (userData?.groupId) {
+      return choruses.filter(c => c.id === userData.groupId || c.code === userData.groupId);
+    }
+    return choruses;
+  }, [choruses, userData]);
+
+  const currentChorus = useMemo(() => {
+    return choruses.find(c => c.id === selectedChorusId || c.code === selectedChorusId) || availableChoruses[0];
+  }, [choruses, selectedChorusId, availableChoruses]);
+
   // Subscribe to system settings
   useEffect(() => {
     const unsub = subscribeSystemSettings((cfg) => {
@@ -42,10 +78,10 @@ export const AssistantDashboard = () => {
   useEffect(() => {
     if (!userData?.id) return;
     
-    // Fetch ALL active deacons so the assistant can record attendance for any deacon
+    // Fetch active deacons
     const qDeacons = query(collection(db, 'users'), where('role', '==', 'deacon'));
     const unsubDeacons = onSnapshot(qDeacons, (snap) => {
-      setDeacons(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setAllDeacons(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
 
     // Fetch active activities
@@ -75,6 +111,16 @@ export const AssistantDashboard = () => {
       unsubSubs();
     };
   }, [userData, currentMonthKey]);
+
+  // Filter deacons belonging strictly to this assistant's active chorus
+  const deacons = useMemo(() => {
+    if (!currentChorus) return allDeacons;
+    const cId = currentChorus.id;
+    const cCode = currentChorus.code;
+    return allDeacons.filter(d => {
+      return d.groupId === cId || d.groupId === cCode || (!d.groupId && cId === 'chorus_9');
+    });
+  }, [allDeacons, currentChorus]);
 
   // Fetch today's attendance for selected activity
   useEffect(() => {
@@ -305,19 +351,41 @@ export const AssistantDashboard = () => {
               <span className="px-3 py-0.5 bg-blue-500/30 text-blue-200 text-xs font-bold rounded-full">
                 بوابة الخادم
               </span>
+              <span className="px-3 py-0.5 bg-indigo-500/40 text-indigo-100 text-xs font-black rounded-full border border-indigo-300/30">
+                {currentChorus ? currentChorus.name : 'الخورس الخاص بك'}
+              </span>
               <span className="px-3 py-0.5 bg-amber-400/20 text-amber-200 text-xs font-bold rounded-full border border-amber-300/30">
                 +{subscriptionPoints} نقطة عند دفع الاشتراك
               </span>
             </div>
-            <h2 className="text-xl md:text-2xl font-black">لوحة تحكم الخادم</h2>
+            <h2 className="text-xl md:text-2xl font-black">لوحة تحكم خادم الخورس</h2>
             <p className="text-blue-100/80 text-xs mt-0.5">
-              تسجيل الحضور السريع، تحصيل اشتراك الـ 30ج، ومراجعة طلبات الأنشطة والاعترافات.
+              إدارة وتحضير شمامسة {currentChorus?.name || 'الخورس'}، تحصيل اشتراك الـ 30ج، ومتابعة الافتقاد.
             </p>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/15 text-center shrink-0">
-            <span className="text-[11px] text-blue-200 block font-bold">إجمالي الشمامسة</span>
-            <span className="text-xl font-black text-white">{deacons.length} شماس</span>
+          <div className="flex items-center gap-3">
+            {availableChoruses.length > 1 && (
+              <div className="bg-white/10 backdrop-blur-md px-3 py-2 rounded-2xl border border-white/20 flex items-center gap-2">
+                <Layers className="w-4 h-4 text-blue-200" />
+                <select
+                  value={selectedChorusId}
+                  onChange={(e) => setSelectedChorusId(e.target.value)}
+                  className="bg-transparent text-white text-xs font-black focus:outline-none cursor-pointer"
+                >
+                  {availableChoruses.map(c => (
+                    <option key={c.id} value={c.id} className="text-slate-900 font-bold">
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="bg-white/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/15 text-center shrink-0">
+              <span className="text-[11px] text-blue-200 block font-bold">شمامسة {currentChorus?.name || 'الخورس'}</span>
+              <span className="text-xl font-black text-white">{deacons.length} شماس</span>
+            </div>
           </div>
         </div>
       </div>

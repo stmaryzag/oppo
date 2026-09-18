@@ -9,7 +9,7 @@ export const DEFAULT_CHORUS_GROUPS: Omit<ChorusGroup, 'createdAt'>[] = [
     name: 'الخورس التاسع',
     code: 'chorus_9',
     order: 9,
-    description: 'خورس الشمامسة - الصف الثالث الإعدادي',
+    description: 'مجموعة خورس 9 - خدمة القداسات والألحان والتسبحة',
     active: true,
     color: '#3B82F6' // Blue
   },
@@ -18,7 +18,7 @@ export const DEFAULT_CHORUS_GROUPS: Omit<ChorusGroup, 'createdAt'>[] = [
     name: 'الخورس العاشر',
     code: 'chorus_10',
     order: 10,
-    description: 'خورس الشمامسة - الصف الأول الثانوي',
+    description: 'مجموعة خورس 10 - خدمة القداسات والألحان والتسبحة',
     active: true,
     color: '#8B5CF6' // Purple
   },
@@ -27,7 +27,7 @@ export const DEFAULT_CHORUS_GROUPS: Omit<ChorusGroup, 'createdAt'>[] = [
     name: 'الخورس الحادي عشر',
     code: 'chorus_11',
     order: 11,
-    description: 'خورس الشمامسة - الصف الثاني الثانوي (المجموعة الأساسية)',
+    description: 'مجموعة خورس 11 - خدمة القداسات والألحان والتسبحة',
     active: true,
     color: '#EC4899' // Pink/Rose
   },
@@ -36,7 +36,7 @@ export const DEFAULT_CHORUS_GROUPS: Omit<ChorusGroup, 'createdAt'>[] = [
     name: 'الخورس الثاني عشر',
     code: 'chorus_12',
     order: 12,
-    description: 'خورس الشمامسة - الصف الثالث الثانوي',
+    description: 'مجموعة خورس 12 - خدمة القداسات والألحان والتسبحة',
     active: true,
     color: '#F59E0B' // Amber
   },
@@ -45,7 +45,7 @@ export const DEFAULT_CHORUS_GROUPS: Omit<ChorusGroup, 'createdAt'>[] = [
     name: 'الخورس الثالث عشر',
     code: 'chorus_13',
     order: 13,
-    description: 'خورس الشمامسة - خريجين ومرحلة جامعية أ',
+    description: 'مجموعة خورس 13 - خدمة القداسات والألحان والتسبحة',
     active: true,
     color: '#10B981' // Emerald
   },
@@ -54,7 +54,7 @@ export const DEFAULT_CHORUS_GROUPS: Omit<ChorusGroup, 'createdAt'>[] = [
     name: 'الخورس الرابع عشر',
     code: 'chorus_14',
     order: 14,
-    description: 'خورس الشمامسة - مرحلة جامعية وخريجين ب',
+    description: 'مجموعة خورس 14 - خدمة القداسات والألحان والتسبحة',
     active: true,
     color: '#06B6D4' // Cyan
   }

@@ -2,6 +2,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { DeaconDashboard } from './dashboard/DeaconDashboard';
 import { ParentDashboard } from './dashboard/ParentDashboard';
 import { AssistantDashboard } from './dashboard/AssistantDashboard';
+import { ChorusAdminDashboard } from './dashboard/ChorusAdminDashboard';
 import { AdminDashboard } from './admin/AdminDashboard';
 
 export const Home = () => {
@@ -27,6 +28,10 @@ export const Home = () => {
 
   if (userData.role === 'admin') {
     return <AdminDashboard />;
+  }
+
+  if (userData.role === 'chorus_admin') {
+    return <ChorusAdminDashboard />;
   }
 
   if (userData.role === 'deacon') {

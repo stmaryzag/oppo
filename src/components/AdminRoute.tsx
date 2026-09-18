@@ -12,8 +12,8 @@ export const AdminRoute = () => {
     );
   }
 
-  // Only allow admin or assistant to access the admin routes
-  if (userData && (userData.role === 'admin' || userData.role === 'assistant')) {
+  // Allow super admin, chorus admin, or assistant to access the protected admin routes
+  if (userData && (userData.role === 'admin' || userData.role === 'chorus_admin' || userData.role === 'assistant')) {
     return <Outlet />;
   }
 

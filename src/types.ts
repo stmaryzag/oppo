@@ -1,4 +1,4 @@
-export type Role = 'deacon' | 'parent' | 'admin' | 'assistant';
+export type Role = 'deacon' | 'parent' | 'admin' | 'chorus_admin' | 'assistant';
 
 // Chorus / Group Definition
 export interface ChorusGroup {
@@ -8,7 +8,10 @@ export interface ChorusGroup {
   order: number; // 9, 10, 11, 12, 13, 14 ...
   description?: string;
   active: boolean;
-  servantIds?: string[]; // IDs of assigned servants
+  adminIds?: string[]; // IDs of assigned Chorus Admins (أدمن الخورس)
+  adminNames?: string[]; // Names of assigned Chorus Admins
+  servantIds?: string[]; // IDs of assigned servants (خدام الخورس)
+  servantNames?: string[]; // Names of assigned servants
   color?: string; // Theme accent for the chorus
   createdAt?: string;
 }

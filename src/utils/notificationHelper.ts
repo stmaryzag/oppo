@@ -175,3 +175,22 @@ export async function sendMonthlyTopAwardNotification(
     console.error('Error in sendMonthlyTopAwardNotification:', err);
   }
 }
+
+/**
+ * Send broadcast notification to multiple deacons
+ */
+export async function sendNotificationToDeacons(
+  deaconIds: string[],
+  title: string,
+  body: string,
+  colorTag: 'blue' | 'green' | 'red' | 'yellow' = 'blue'
+) {
+  if (!deaconIds || deaconIds.length === 0) return;
+  try {
+    const promises = deaconIds.map(id => sendDirectNotification(id, title, body, colorTag));
+    await Promise.all(promises);
+  } catch (err) {
+    console.error('Error sending notification to deacons:', err);
+  }
+}
+

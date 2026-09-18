@@ -26,10 +26,18 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/admin/$(request.auth.uid))
       );
     }
+
+    function isChorusAdmin() {
+      return isSignedIn() && (
+        getUserRole() == 'chorus_admin' ||
+        isAdmin()
+      );
+    }
     
     function isAssistant() {
       return isSignedIn() && (
         getUserRole() == 'assistant' ||
+        getUserRole() == 'chorus_admin' ||
         isAdmin()
       );
     }
