@@ -1,0 +1,192 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // =========================================================================
+    // Helper Functions & Security Checks
+    // =========================================================================
+    
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isUserDocExists() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    
+    function getUserRole() {
+      return isUserDocExists() 
+        ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role 
+        : 'unknown';
+    }
+    
+    function isAdmin() {
+      return isSignedIn() && (
+        getUserRole() == 'admin' ||
+        exists(/databases/$(database)/documents/admin/$(request.auth.uid))
+      );
+    }
+    
+    function isAssistant() {
+      return isSignedIn() && (
+        getUserRole() == 'assistant' ||
+        isAdmin()
+      );
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // =========================================================================
+    // 1. Users & Accounts Collection
+    // =========================================================================
+    match /users/{userId} {
+      // Any authenticated user can read directory info (names, teams, levels)
+      allow read: if isSignedIn();
+      
+      // Admins can create/manage, or users can create their own profile upon login
+      allow create: if isSignedIn();
+      
+      // Self-updates (profile photo, phone, etc.) or management by admin/assistant
+      allow update: if isOwner(userId) || isAssistant() || isAdmin();
+      
+      // Deletions strictly restricted to Admins
+      allow delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // 2. Admin System Collection
+    // =========================================================================
+    match /admin/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isSignedIn();
+    }
+
+    // =========================================================================
+    // 3. Subscriptions Collection (Monthly 30 EGP Fee Tracking)
+    // =========================================================================
+    match /subscriptions/{subId} {
+      allow read: if isSignedIn();
+      allow write: if isAssistant() || isAdmin();
+    }
+
+    // =========================================================================
+    // 4. Levels & Gamification Configuration
+    // =========================================================================
+    match /levels/{levelId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isAssistant();
+    }
+
+    // =========================================================================
+    // 5. Structure & Settings (Areas, Teams, Activity Types, Winners, System)
+    // =========================================================================
+    match /system_settings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isAssistant();
+    }
+    
+    match /areas/{areaId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isAssistant();
+    }
+    
+    match /teams/{teamId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isAssistant();
+    }
+    
+    match /activity_types/{activityId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isAssistant();
+    }
+    
+    match /monthly_winners/{winnerId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isAssistant();
+    }
+
+    // =========================================================================
+    // 6. Attendance & Points Records (Audit Logs)
+    // =========================================================================
+    match /attendance_records/{recordId} {
+      allow read: if isSignedIn();
+      allow create: if isAssistant() || isAdmin();
+      allow update, delete: if isAssistant() || isAdmin();
+    }
+    
+    match /points_log/{logId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAssistant() || isAdmin();
+    }
+
+    // =========================================================================
+    // 7. Activity & Registration Requests (From Deacons)
+    // =========================================================================
+    match /registration_requests/{requestId} {
+      allow read: if isSignedIn();
+      allow create: if true; // Allows unauthenticated or authenticated submissions
+      allow update, delete: if isAssistant() || isAdmin() || isSignedIn();
+    }
+
+    // =========================================================================
+    // 8. Afetqad (Weekly Assignments & Home Visits)
+    // =========================================================================
+    match /afetqad_assignments/{assignmentId} {
+      allow read: if isSignedIn();
+      allow create, delete: if isAssistant() || isAdmin();
+      allow update: if isSignedIn(); // Callers update their call status/notes
+    }
+    
+    match /home_visits/{visitId} {
+      allow read: if isSignedIn();
+      allow write: if isAssistant() || isAdmin();
+    }
+
+    // =========================================================================
+    // 9. Notifications (Scheduled, Recurring & Inboxes)
+    // =========================================================================
+    match /notifications_scheduled/{notifId} {
+      allow read: if isSignedIn();
+      allow write: if isAssistant() || isAdmin();
+    }
+    
+    match /recurring_notifications/{notifId} {
+      allow read: if isSignedIn();
+      allow write: if isAssistant() || isAdmin();
+    }
+    
+    match /notifications_inbox/{inboxId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn(); // Mark as read
+      allow delete: if isSignedIn();
+    }
+
+    // =========================================================================
+    // 10. Chorus Groups, Study Materials & Quizzes
+    // =========================================================================
+    match /chorus_groups/{groupId} {
+      allow read: if true;
+      allow write: if isAdmin() || isAssistant();
+    }
+
+    match /study_materials/{materialId} {
+      allow read: if true;
+      allow write: if isAdmin() || isAssistant();
+    }
+
+    match /quizzes/{quizId} {
+      allow read: if true;
+      allow write: if isAdmin() || isAssistant();
+    }
+
+    match /quiz_submissions/{submissionId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+  }
+}

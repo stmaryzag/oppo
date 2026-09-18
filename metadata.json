@@ -1,0 +1,8 @@
+{
+  "name": "الشمامسة",
+  "description": "نظام خورس شمامسة كنيسة السيدة العذراء وماريوحنا الرسول لمتابعة الأنشطة والاشتراكات الشهرية والنقاط",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

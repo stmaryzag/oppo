@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile document",
+      "type": "object",
+      "properties": {
+        "username": { "type": "string" },
+        "role": { "type": "string", "enum": ["deacon", "parent", "admin", "assistant"] },
+        "fullName": { "type": "string" },
+        "email": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["username", "role", "fullName", "createdAt"]
+    },
+    "Subscription": {
+      "title": "Subscription",
+      "description": "Monthly subscription record (30 EGP)",
+      "type": "object",
+      "properties": {
+        "deaconId": { "type": "string" },
+        "monthKey": { "type": "string" },
+        "year": { "type": "number" },
+        "month": { "type": "number" },
+        "amount": { "type": "number" },
+        "paid": { "type": "boolean" }
+      },
+      "required": ["deaconId", "monthKey", "amount", "paid"]
+    },
+    "UserLevel": {
+      "title": "UserLevel",
+      "description": "Configurable deacon gamification level threshold",
+      "type": "object",
+      "properties": {
+        "levelNumber": { "type": "number" },
+        "title": { "type": "string" },
+        "minPoints": { "type": "number" },
+        "badgeColor": { "type": "string" }
+      },
+      "required": ["levelNumber", "title", "minPoints"]
+    },
+    "RecurringNotification": {
+      "title": "RecurringNotification",
+      "description": "Weekly fixed recurring reminder",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "dayOfWeek": { "type": "number" },
+        "time": { "type": "string" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["title", "body", "dayOfWeek", "time", "active"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and deacon records"
+    },
+    "/subscriptions/{subId}": {
+      "schema": "Subscription",
+      "description": "Monthly 30 EGP subscriptions"
+    },
+    "/levels/{levelId}": {
+      "schema": "UserLevel",
+      "description": "Deacon rank levels and points threshold"
+    },
+    "/recurring_notifications/{notifId}": {
+      "schema": "RecurringNotification",
+      "description": "Fixed weekly notifications"
+    }
+  }
+}
