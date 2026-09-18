@@ -81,7 +81,8 @@ export const Profile = () => {
 
   const getRoleName = (r?: string) => {
     switch (r) {
-      case 'admin': return 'أدمن (مدير النظام)';
+      case 'admin': return 'الادمن الرئيسي (مدير النظام)';
+      case 'chorus_admin': return 'أدمن الخورس (مسؤول الخورس)';
       case 'assistant': return 'خادم (أمين خدمة)';
       case 'parent': return 'ولي أمر';
       default: return 'شماس';

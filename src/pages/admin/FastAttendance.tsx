@@ -42,7 +42,7 @@ export const FastAttendance = () => {
     const unsubUsers = onSnapshot(collection(db, 'users'), (snap) => {
       const all = snap.docs.map(d => ({ id: d.id, ...d.data() } as UserData));
       setDeacons(all.filter(u => u.role === 'deacon'));
-      setAssistants(all.filter(u => u.role === 'assistant' || u.role === 'admin'));
+      setAssistants(all.filter(u => u.role === 'assistant' || u.role === 'chorus_admin' || u.role === 'admin'));
     });
 
     return () => {

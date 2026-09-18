@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 export const QuizManager: React.FC = () => {
   const { userData } = useAuth();
   const navigate = useNavigate();
-  const isAdminOrAssistant = userData?.role === 'admin' || userData?.role === 'assistant';
+  const isAdminOrAssistant = userData?.role === 'admin' || userData?.role === 'chorus_admin' || userData?.role === 'assistant';
 
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [choruses, setChoruses] = useState<ChorusGroup[]>([]);

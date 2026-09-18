@@ -21,7 +21,7 @@ const SUBJECTS_METADATA: Record<StudySubject, { name: string; color: string; ico
 
 export const StudyMaterials: React.FC = () => {
   const { userData } = useAuth();
-  const isAdminOrAssistant = userData?.role === 'admin' || userData?.role === 'assistant';
+  const isAdminOrAssistant = userData?.role === 'admin' || userData?.role === 'chorus_admin' || userData?.role === 'assistant';
 
   const [materials, setMaterials] = useState<StudyMaterial[]>([]);
   const [choruses, setChoruses] = useState<ChorusGroup[]>([]);

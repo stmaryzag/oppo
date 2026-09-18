@@ -27,15 +27,34 @@ export const AppLayout = () => {
     navigate('/login');
   };
 
+  const roleBadge = (() => {
+    switch (userData?.role) {
+      case 'admin':
+        return { label: 'الادمن الرئيسي', className: 'bg-red-50 text-red-700 border border-red-100' };
+      case 'chorus_admin':
+        return { label: 'أدمن الخورس', className: 'bg-purple-50 text-purple-700 border border-purple-200 font-black' };
+      case 'assistant':
+        return { label: 'خادم الخورس', className: 'bg-amber-50 text-amber-800 border border-amber-200' };
+      case 'parent':
+        return { label: 'ولي أمر', className: 'bg-blue-50 text-blue-700 border border-blue-200' };
+      default:
+        return { label: 'شماس', className: 'bg-indigo-50 text-indigo-700 border border-indigo-100' };
+    }
+  })();
+
   const navItems = [
     { label: 'الرئيسية', icon: Home, path: '/' },
     { label: 'المناهج والألحان', icon: BookOpen, path: '/study' },
     { label: 'الاختبارات', icon: Award, path: '/quizzes' },
-    ...(userData?.role === 'admin' || userData?.role === 'assistant' 
+    ...(userData?.role === 'admin' || userData?.role === 'chorus_admin' || userData?.role === 'assistant' 
       ? [{ label: 'الحضور السريع', icon: UserCheck, path: '/admin/attendance' }] 
       : []),
     { label: 'الإشعارات', icon: Bell, path: '/notifications', badge: unreadCount },
-    ...(userData?.role === 'admin' ? [{ label: 'لوحة الإدارة', icon: Shield, path: '/admin' }] : []),
+    ...(userData?.role === 'admin' 
+      ? [{ label: 'لوحة الإدارة', icon: Shield, path: '/admin' }] 
+      : userData?.role === 'chorus_admin'
+      ? [{ label: 'لوحة الخورس', icon: Shield, path: '/admin/chorus' }]
+      : []),
     { label: 'حسابي', icon: User, path: '/profile' },
   ];
 
@@ -58,8 +77,8 @@ export const AppLayout = () => {
           <div className="min-w-0">
             <h1 className="font-extrabold text-slate-800 text-sm truncate">{userData?.fullName}</h1>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="text-[11px] font-bold px-2 py-0.2 rounded-full bg-indigo-50 text-indigo-700">
-                {userData?.role === 'deacon' ? 'شماس' : userData?.role === 'admin' ? 'أدمن النظام' : userData?.role === 'assistant' ? 'خادم' : 'ولي أمر'}
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${roleBadge.className}`}>
+                {roleBadge.label}
               </span>
               <span className="text-[10px] text-slate-400 font-mono hidden sm:inline" dir="ltr">@{userData?.username}</span>
             </div>
